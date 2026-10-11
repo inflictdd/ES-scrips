@@ -1,0 +1,402 @@
+-- NexusLib Replacement (main.lua)
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+local Library = {}
+local settings = {
+    guikeybind = Enum.KeyCode.P
+}
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "Athena ui Remake"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+if syn and syn.protect_gui then
+    syn.protect_gui(gui)
+    gui.Parent = CoreGui
+elseif gethui then
+    gui.Parent = gethui()
+else
+    pcall(function() gui.Parent = CoreGui end)
+    if not gui.Parent then
+        gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end
+end
+
+local function addCorner(parent, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius or 6)
+    corner.Parent = parent
+end
+
+function Library:Note(title, text, duration)
+    task.spawn(function()
+        local notifContainer = gui:FindFirstChild("NotificationContainer")
+        if not notifContainer then
+            notifContainer = Instance.new("Frame")
+            notifContainer.Name = "NotificationContainer"
+            notifContainer.Size = UDim2.new(0, 300, 1, 0)
+            notifContainer.Position = UDim2.new(1, -320, 0, 20)
+            notifContainer.BackgroundTransparency = 1
+            notifContainer.Parent = gui
+            
+            local layout = Instance.new("UIListLayout")
+            layout.SortOrder = Enum.SortOrder.LayoutOrder
+            layout.Padding = UDim.new(0, 8)
+            layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+            layout.Parent = notifContainer
+        end
+        
+        local note = Instance.new("Frame")
+        note.Size = UDim2.new(1, 0, 0, 60)
+        note.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        note.BorderSizePixel = 0
+        note.Parent = notifContainer
+        addCorner(note, 6)
+        
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Size = UDim2.new(1, -20, 0, 22)
+        titleLabel.Position = UDim2.new(0, 10, 0, 6)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.Text = title or "Notification"
+        titleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+        titleLabel.TextSize = 14
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.Parent = note
+        
+        local descLabel = Instance.new("TextLabel")
+        descLabel.Size = UDim2.new(1, -20, 0, 24)
+        descLabel.Position = UDim2.new(0, 10, 0, 28)
+        descLabel.BackgroundTransparency = 1
+        descLabel.Font = Enum.Font.Gotham
+        descLabel.Text = text or ""
+        descLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+        descLabel.TextSize = 12
+        descLabel.TextXAlignment = Enum.TextXAlignment.Left
+        descLabel.TextWrapped = true
+        descLabel.Parent = note
+        
+        task.wait(duration or 3)
+        note:Destroy()
+    end)
+end
+
+function Library:Library()
+    local libObj = {}
+    
+    local mainWindow = gui:FindFirstChild("Window0")
+    if not mainWindow then
+        mainWindow = Instance.new("Frame")
+        mainWindow.Name = "Window0"
+        mainWindow.Size = UDim2.new(0, 650, 0, 420)
+        mainWindow.AnchorPoint = Vector2.new(0.5, 0.5)
+        mainWindow.Position = UDim2.new(0.5, 0, 0.5, 0)
+        mainWindow.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+        mainWindow.Parent = gui
+        addCorner(mainWindow, 8)
+        
+        local topBar = Instance.new("Frame")
+        topBar.Size = UDim2.new(1, 0, 0, 35)
+        topBar.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+        topBar.Parent = mainWindow
+        addCorner(topBar, 8)
+        
+        local title = Instance.new("TextLabel")
+        title.Size = UDim2.new(1, -20, 1, 0)
+        title.Position = UDim2.new(0, 12, 0, 0)
+        title.BackgroundTransparency = 1
+        title.Font = Enum.Font.GothamBold
+        title.Text = "Nexus Client"
+        title.TextColor3 = Color3.fromRGB(220, 220, 220)
+        title.TextSize = 15
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.Parent = topBar
+        
+        local tabContainer = Instance.new("ScrollingFrame")
+        tabContainer.Size = UDim2.new(0, 140, 1, -45)
+        tabContainer.Position = UDim2.new(0, 5, 0, 40)
+        tabContainer.BackgroundTransparency = 1
+        tabContainer.ScrollBarThickness = 2
+        tabContainer.Parent = mainWindow
+        
+        local tabLayout = Instance.new("UIListLayout")
+        tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        tabLayout.Padding = UDim.new(0, 4)
+        tabLayout.Parent = tabContainer
+        
+        libObj.MainWindow = mainWindow
+        libObj.TabContainer = tabContainer
+        libObj.FirstTab = true
+    end
+    
+    function libObj:Window(windowName)
+        local winObj = {}
+        
+        local tabButton = Instance.new("TextButton")
+        tabButton.Size = UDim2.new(1, 0, 0, 30)
+        tabButton.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+        tabButton.Font = Enum.Font.GothamMedium
+        tabButton.Text = windowName
+        tabButton.TextColor3 = Color3.fromRGB(180, 180, 180)
+        tabButton.TextSize = 13
+        tabButton.Parent = libObj.TabContainer
+        addCorner(tabButton, 6)
+        
+        local page = Instance.new("ScrollingFrame")
+        page.Size = UDim2.new(1, -155, 1, -45)
+        page.Position = UDim2.new(0, 150, 0, 40)
+        page.BackgroundTransparency = 1
+        page.ScrollBarThickness = 4
+        page.Visible = libObj.FirstTab
+        page.Parent = libObj.MainWindow
+        
+        if libObj.FirstTab then
+            tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            tabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            libObj.FirstTab = false
+        end
+        
+        local pageLayout = Instance.new("UIListLayout")
+        pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        pageLayout.Padding = UDim.new(0, 6)
+        pageLayout.Parent = page
+        
+        tabButton.MouseButton1Click:Connect(function()
+            for _, child in ipairs(libObj.MainWindow:GetChildren()) do
+                if child:IsA("ScrollingFrame") and child ~= libObj.TabContainer then
+                    child.Visible = false
+                end
+            end
+            for _, btn in ipairs(libObj.TabContainer:GetChildren()) do
+                if btn:IsA("TextButton") then
+                    btn.TextColor3 = Color3.fromRGB(180, 180, 180)
+                    btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+                end
+            end
+            page.Visible = true
+            tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            tabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        end)
+        
+        function winObj:Toggle(name, default, callback)
+            local toggleFrame = Instance.new("TextButton")
+            toggleFrame.Size = UDim2.new(1, -10, 0, 32)
+            toggleFrame.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            toggleFrame.Text = ""
+            toggleFrame.Parent = page
+            addCorner(toggleFrame, 6)
+            
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, -40, 1, 0)
+            label.Position = UDim2.new(0, 12, 0, 0)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.GothamMedium
+            label.Text = name
+            label.TextColor3 = Color3.fromRGB(200, 200, 200)
+            label.TextSize = 13
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = toggleFrame
+            
+            local box = Instance.new("Frame")
+            box.Size = UDim2.new(0, 18, 0, 18)
+            box.Position = UDim2.new(1, -26, 0.5, -9)
+            box.BackgroundColor3 = default and Color3.fromRGB(110, 40, 200) or Color3.fromRGB(40, 40, 40)
+            box.Parent = toggleFrame
+            addCorner(box, 4)
+            
+            local toggled = default or false
+            toggleFrame.MouseButton1Click:Connect(function()
+                toggled = not toggled
+                box.BackgroundColor3 = toggled and Color3.fromRGB(110, 40, 200) or Color3.fromRGB(40, 40, 40)
+                pcall(callback, toggled)
+            end)
+        end
+        
+        function winObj:Button(name, callback)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, -10, 0, 32)
+            btn.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            btn.Font = Enum.Font.GothamMedium
+            btn.Text = name
+            btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            btn.TextSize = 13
+            btn.Parent = page
+            addCorner(btn, 6)
+            
+            btn.MouseButton1Click:Connect(function()
+                pcall(callback)
+            end)
+        end
+        
+        function winObj:ToggleDropdown(name, default, callback)
+            local dropObj = {}
+            local dropdownFrame = Instance.new("Frame")
+            dropdownFrame.Size = UDim2.new(1, -10, 0, 32)
+            dropdownFrame.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+            dropdownFrame.ClipsDescendants = true
+            dropdownFrame.Parent = page
+            addCorner(dropdownFrame, 6)
+            
+            local header = Instance.new("TextButton")
+            header.Size = UDim2.new(1, 0, 0, 32)
+            header.BackgroundTransparency = 1
+            header.Font = Enum.Font.GothamMedium
+            header.Text = "  " .. name
+            header.TextColor3 = Color3.fromRGB(200, 200, 200)
+            header.TextSize = 13
+            header.TextXAlignment = Enum.TextXAlignment.Left
+            header.Parent = dropdownFrame
+            
+            local container = Instance.new("Frame")
+            container.Size = UDim2.new(1, 0, 1, -32)
+            container.Position = UDim2.new(0, 0, 0, 32)
+            container.BackgroundTransparency = 1
+            container.Parent = dropdownFrame
+            
+            local listLayout = Instance.new("UIListLayout")
+            listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            listLayout.Padding = UDim.new(0, 4)
+            listLayout.Parent = container
+            
+            local expanded = false
+            header.MouseButton1Click:Connect(function()
+                expanded = not expanded
+                dropdownFrame.Size = expanded and UDim2.new(1, -10, 0, 32 + listLayout.AbsoluteContentSize.Y + 10) or UDim2.new(1, -10, 0, 32)
+                pcall(callback, expanded)
+            end)
+            
+            function dropObj:Toggle(subName, subDefault, subCallback)
+                winObj.Toggle(dropObj, subName, subDefault, subCallback)
+            end
+            function dropObj:Button(subName, subCallback)
+                local b = Instance.new("TextButton")
+                b.Size = UDim2.new(1, -10, 0, 28)
+                b.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                b.Font = Enum.Font.GothamMedium
+                b.Text = subName
+                b.TextColor3 = Color3.fromRGB(190, 190, 190)
+                b.TextSize = 12
+                b.Parent = container
+                addCorner(b, 4)
+                b.MouseButton1Click:Connect(function() pcall(subCallback) end)
+            end
+            function dropObj:Keybind(subName, defaultKey, subCallback)
+                local kb = Instance.new("TextButton")
+                kb.Size = UDim2.new(1, -10, 0, 28)
+                kb.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                kb.Font = Enum.Font.GothamMedium
+                kb.Text = subName .. ": " .. tostring(defaultKey):gsub("Enum.KeyCode.", "")
+                kb.TextColor3 = Color3.fromRGB(190, 190, 190)
+                kb.TextSize = 12
+                kb.Parent = container
+                addCorner(kb, 4)
+                
+                kb.MouseButton1Click:Connect(function()
+                    kb.Text = subName .. ": ..."
+                    local conn
+                    conn = UserInputService.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.Keyboard then
+                            defaultKey = input.KeyCode
+                            kb.Text = subName .. ": " .. tostring(defaultKey):gsub("Enum.KeyCode.", "")
+                            conn:Disconnect()
+                            pcall(subCallback, defaultKey)
+                        end
+                    end)
+                end)
+            end
+            function dropObj:Slider(subName, min, max, inc, default, subCallback)
+                local slider = Instance.new("Frame")
+                slider.Size = UDim2.new(1, -10, 0, 40)
+                slider.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                slider.Parent = container
+                addCorner(slider, 4)
+                
+                local lbl = Instance.new("TextLabel")
+                lbl.Size = UDim2.new(1, -10, 0, 20)
+                lbl.Position = UDim2.new(0, 6, 0, 2)
+                lbl.BackgroundTransparency = 1
+                lbl.Font = Enum.Font.GothamMedium
+                lbl.Text = subName .. ": " .. tostring(default)
+                lbl.TextColor3 = Color3.fromRGB(190, 190, 190)
+                lbl.TextSize = 12
+                lbl.TextXAlignment = Enum.TextXAlignment.Left
+                lbl.Parent = slider
+                
+                local bar = Instance.new("TextButton")
+                bar.Size = UDim2.new(1, -12, 0, 8)
+                bar.Position = UDim2.new(0, 6, 0, 26)
+                bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                bar.Text = ""
+                bar.Parent = slider
+                addCorner(bar, 4)
+                
+                local fill = Instance.new("Frame")
+                fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+                fill.BackgroundColor3 = Color3.fromRGB(110, 40, 200)
+                fill.Parent = bar
+                addCorner(fill, 4)
+                
+                local dragging = false
+                bar.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+                end)
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+                end)
+                UserInputService.InputChanged:Connect(function(input)
+                    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                        local pos = math.clamp((Mouse.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
+                        local val = math.round((min + (max - min) * pos) / inc) * inc
+                        fill.Size = UDim2.new(pos, 0, 1, 0)
+                        lbl.Text = subName .. ": " .. tostring(val)
+                        pcall(subCallback, val)
+                    end
+                end)
+            end
+            function dropObj:TextBox(subName, placeholder, subCallback)
+                local tb = Instance.new("TextBox")
+                tb.Size = UDim2.new(1, -10, 0, 28)
+                tb.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                tb.Font = Enum.Font.GothamMedium
+                tb.PlaceholderText = placeholder or ""
+                tb.Text = ""
+                tb.TextColor3 = Color3.fromRGB(190, 190, 190)
+                tb.TextSize = 12
+                tb.Parent = container
+                addCorner(tb, 4)
+                
+                tb.FocusLost:Connect(function()
+                    pcall(subCallback, tb.Text)
+                end)
+            end
+            
+            return dropObj
+        end
+        
+        function winObj:SplitFrame()
+            return winObj
+        end
+        
+        return winObj
+    end
+    
+    return libObj
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == settings.guikeybind then
+        local win = gui:FindFirstChild("Window0")
+        if win then
+            win.Visible = not win.Visible
+        end
+    end
+end)
+
+return gui, settings
