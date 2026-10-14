@@ -1,6 +1,6 @@
 if shared.AthenaLoaded then return 0 end
 shared.AthenaLoaded = true
-local ui, settings = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ballslord12/thehbeisauthentic/main/ball"))()
+local ui, settings = loadstring(game:HttpGetAsync("http://raw.githubusercontent.com/inflictdd/ES-scrips/refs/heads/main/athena2load"))()
 local lib = ui:Library()
 local togs = {
 	SilentAim ={
